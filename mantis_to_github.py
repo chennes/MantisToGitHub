@@ -69,11 +69,11 @@ MANTIS_TO_GITHUB_USERNAME_MAP = {
     "chrisb":"" ,
     "David_D":"" ,
     "DeepSOIC":"deepsoic" ,
-    "eivindkvedalen":"" ,
+    "eivindkvedalen":"eivindkv" ,
     "howetuft":"" ,
     "HoWil":"" ,
-    "hyarion":"" ,
-    "ian.rees":"" ,
+    "hyarion":"hyarion" ,
+    "ian.rees":"ianrees" ,
     "ickby":"ickby" ,
     "kkremitzki":"kkremitzki" ,
     "Kunda1":"luzpaz" ,
@@ -85,14 +85,30 @@ MANTIS_TO_GITHUB_USERNAME_MAP = {
     "russ4262":"Russ4262" ,
     "sgrogan":"sgrogan" ,
     "shaiseger":"shaise" ,
-    "shoogen":"" ,
+    "shoogen":"5263" ,
     "sliptonic":"sliptonic" ,
     "triplus":"triplus" ,
     "uwestoehr":"donovaly" ,
     "vejmarie":"vejmarie" ,
     "wandererfan":"WandererFan" ,
     "wmayer":"wwmayer" ,
-    "yorik":"yorikvanhavre" ,
+    "yorik":"yorikvanhavre"
+}
+
+# Not all Mantis projects have corresponding GitHub labels: for those that do,
+# this map does the translation between them
+MANTIS_PROJECT_TO_GITHUB_LABEL_MAP = {
+    "Arch":"🏛 Arch",
+    "None":"🐛 bug",
+    "FreeCAD":"core",
+    "Draft":"📐 Draft",
+    "FEM":"🧪 FEM",
+    "Part":"Part",
+    "PartDesign":"🚜 PartDesign",
+    "Path":"🛤️ Path",
+    "Sketcher":"✏️ Sketcher",
+    "Spreadsheet":"Spreadsheet",
+    "TechDraw":"TechDraw"
 }
 
 #########################################################################################
