@@ -99,7 +99,7 @@ MANTIS_TO_GITHUB_USERNAME_MAP = {
 # this map does the translation between them
 MANTIS_PROJECT_TO_GITHUB_LABEL_MAP = {
     "Arch":"🏛 Arch",
-    "None":"🐛 bug",
+    "Bug":"🐛 bug",
     "FreeCAD":"core",
     "Draft":"📐 Draft",
     "FEM":"🧪 FEM",
@@ -166,7 +166,7 @@ class Issue:
         result["repo"] = GITHUB_REPO_NAME
         result["title"] = self.summary
         result["body"] = self._create_markdown()
-        result["assignee"] = self._map_assignee()
+        result["assignees"] = self._map_assignee()
         result["labels"] = self._create_labels()
         return result
 
@@ -218,16 +218,25 @@ class Issue:
             md += f"```\n{self.notes}\n```"
         return md
 
-    def _map_assignee(self) -> Optional[str]:
+    def _map_assignee(self) -> Optional[List[str]]:
         if self.assigned_to in MANTIS_TO_GITHUB_USERNAME_MAP:
             mapped_value = MANTIS_TO_GITHUB_USERNAME_MAP[self.assigned_to]
             if mapped_value:
-                return mapped_value
+                return [mapped_value]
         return None
 
     def _create_labels(self) -> List[str]:
         # For FreeCAD's purposes, the only label we use is the project name:
-        return [self.project]
+        labels = []
+        if self.project in MANTIS_PROJECT_TO_GITHUB_LABEL_MAP:
+            labels.append (MANTIS_PROJECT_TO_GITHUB_LABEL_MAP[self.project])
+        else:
+            labels.append (self.project)
+        if self.category == "Bug":
+            labels.append ("🐛 bug")
+        elif self.category == "Feature":
+            labels.append ("Feature")
+        return labels
 
     def _clean_freecad_info(self) -> str:
         text_to_remove = """<!--ATTENTION:
