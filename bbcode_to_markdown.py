@@ -27,7 +27,8 @@ import sys
 
 class BBCodeToMarkdown:
     """ Convert text containing BBCode characters to GitHub-flavored markdown. Only Markdown is emitted,
-    no HTML tags are used. Unsupported BBCode tags are silently removed. Nesting is partially supported. """
+    no HTML tags are used. Unsupported BBCode tags are silently removed. Nesting is partially supported.
+    This is a naive converter based on regular expressions, it does NOT do any real language parsing. """
 
 # BBCode tags and their treatment:
 # [b]Text[/b] -> Bold, maps to **Text**
@@ -125,10 +126,28 @@ class BBCodeToMarkdown:
             match = outer_pattern.search(self.text)
 
     def code(self):
-        pass
+        # Inline code:
+        search_regex = "\\[code.*?\\](.*?)\\[/code\\]"
+        self.text = re.sub(search_regex, "`\\1`", self.text, flags=re.IGNORECASE)
+        # Block of code:
+        search_regex = "\\[code.*?\\](.*?)\\[/code\\]\n"
+        self.text = re.sub(search_regex, "```\\1```\n", self.text, flags=re.IGNORECASE|re.DOTALL)
 
     def quote(self):
-        pass
+        search_regex = "\\[quote.*?\\]\n(.*?)\n\\[/quote\\]\n"
+        quote_matcher = re.compile(search_regex, flags=re.IGNORECASE|re.DOTALL)
+        match = quote_matcher.search(self.text)
+        while match is not None:
+            span = match.span()
+            quote_contents = match.group(1)
+            lines = quote_contents.split("\n")
+            quote_in_markdown = ""
+            for line in lines:
+                quote_in_markdown += "> " + line + "\n"
+            new_string = self.text[0:span[0]] + quote_in_markdown + self.text[span[1]:]
+            self.text = new_string
+            match = quote_matcher.search(self.text)
+
 
     def hr(self):
         pass
@@ -171,6 +190,20 @@ Lists:
 [*] This is a bullet point in an ordered list, starting from item 2
 [*] This is a second bullet point in an ordered list, but numbered 3
 [/list]
+
+Code:
+This is a chunk of text containing [code]A little bit of code[/code].
+[code]
+This is some real code, in a block
+[/code]
+[code=top_sekrit_language]
+Markdown does not care what language the code is in
+[/code]
+
+Quotes:
+[quote="some guy"]
+Markdown does not care who the quote is by, or when it happened
+[/quote]
     """
 
     b = BBCodeToMarkdown(text)
