@@ -148,18 +148,25 @@ class BBCodeToMarkdown:
             self.text = new_string
             match = quote_matcher.search(self.text)
 
-
     def hr(self):
-        pass
+        search_regex = r"\[hr\]"
+        self.text = re.sub(search_regex, "\n\n===\n\n", self.text, flags=re.IGNORECASE)
 
     def url(self):
-        pass
+        # Two forms of URL
+        search_regex = "\\[url\\s*=\\s*(.*?)\\](.*?)\\[/url\\]"
+        self.text = re.sub(search_regex, "[\\2](\\1)", self.text, flags=re.IGNORECASE)
+
+        search_regex = "\\[url\\](.*?)\\[/url\\]"
+        self.text = re.sub(search_regex, "(\\1)", self.text, flags=re.IGNORECASE)
 
     def email(self):
-        pass
+        search_regex = "\\[email\\s*=\\s*(.*?)\\](.*?)\\[/email\\]"
+        self.text = re.sub(search_regex, "[\\2](mailto:\\1)", self.text, flags=re.IGNORECASE)
 
     def img(self):
-        pass 
+        search_regex = "\\[img\\](.*?)\\[/img\\]"
+        self.text = re.sub(search_regex, "!(\\1)", self.text, flags=re.IGNORECASE)
 
 def selftest():
     text = """
@@ -204,6 +211,15 @@ Quotes:
 [quote="some guy"]
 Markdown does not care who the quote is by, or when it happened
 [/quote]
+
+A horizontal rule
+[hr]
+
+URLS:
+This is a simple URL: [url]http://freecad.org[/url]
+Here is a [url=http://forum.freecad.org]more complex example[/url].
+This is an email link: [email=chennes@pioneerlibrarysystem.org]email me[/email]
+And here's an image: [img]http://some_image.link[/img]
     """
 
     b = BBCodeToMarkdown(text)
