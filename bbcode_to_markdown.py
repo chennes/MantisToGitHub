@@ -24,6 +24,7 @@
 
 import re
 import sys
+from typing import Dict
 
 class BBCodeToMarkdown:
     """ Convert text containing BBCode characters to GitHub-flavored markdown. Only Markdown is emitted,
@@ -51,9 +52,14 @@ class BBCodeToMarkdown:
 # [url=link]text[/url] -> Link, replaced with [text](link)
 # [email=chennes@]Your email here[/email] -> Replaced with a mailto: link as above
 # [img]link[/img] -> Image, replaced with !(link)
+#
+# Finally, @ mentions are handled via a passed-in map that takes Mantis usernames and maps them to 
+# GitHub usernames. Any mapping that results in an empty string, plus any mention not in the mapping,
+# have their "@" signs removed, to avoid mentioning someone inadvertently. 
 
-    def __init__ (self, bbcode:str):
+    def __init__ (self, bbcode:str, mention_map:Dict[str,str] = {}):
         self.text = bbcode
+        self.mention_map = mention_map
 
     def md (self) -> str:
         self.strip_unsupported()
@@ -67,6 +73,7 @@ class BBCodeToMarkdown:
         self.url()
         self.email()
         self.img()
+        self.mentions()
         return self.text
 
     def strip_unsupported(self):
@@ -130,7 +137,7 @@ class BBCodeToMarkdown:
         search_regex = "\\[code.*?\\](.*?)\\[/code\\]"
         self.text = re.sub(search_regex, "`\\1`", self.text, flags=re.IGNORECASE)
         # Block of code:
-        search_regex = "\\[code.*?\\](.*?)\\[/code\\]\n"
+        search_regex = "\\[code.*?\\](.*?)\\[/code\\]"
         self.text = re.sub(search_regex, "```\\1```\n", self.text, flags=re.IGNORECASE|re.DOTALL)
 
     def quote(self):
@@ -150,7 +157,7 @@ class BBCodeToMarkdown:
 
     def hr(self):
         search_regex = r"\[hr\]"
-        self.text = re.sub(search_regex, "\n\n===\n\n", self.text, flags=re.IGNORECASE)
+        self.text = re.sub(search_regex, "\n\n---\n\n", self.text, flags=re.IGNORECASE)
 
     def url(self):
         # Two forms of URL
@@ -167,6 +174,33 @@ class BBCodeToMarkdown:
     def img(self):
         search_regex = "\\[img\\](.*?)\\[/img\\]"
         self.text = re.sub(search_regex, "!(\\1)", self.text, flags=re.IGNORECASE)
+
+    def mentions(self):
+        mention_regex_string = "@([a-zA-Z0-9]+)"
+        mention_matcher = re.compile(mention_regex_string, flags=re.DOTALL)
+        matches = mention_matcher.finditer(self.text)
+        pos = 0
+        finished_string = ""
+        for match in matches:
+            if match.start() > 0:
+                if self.text[match.start()-1].isalnum():
+                    # If the character before the @ sign is a letter or number, this is probably an email
+                    # address, not an @mention -- skip it.
+                    finished_string += self.text[pos:match.end()]
+                    pos = match.end()
+                    continue
+            mention = match.group(1)
+            span = match.span()
+            if mention in self.mention_map and len(self.mention_map[mention]) > 0:
+                new_mention = "@" + self.mention_map[match.group(1)]
+            else:
+                # If they aren't in the map, strip the "@" sign so we don't accidentally mention someone random in our
+                # Markdown
+                new_mention = match.group(1)
+            finished_string += self.text[pos:span[0]] + new_mention
+            pos = span[1]
+        finished_string += self.text[pos:]
+        self.text = finished_string
 
 def selftest():
     text = """
@@ -220,9 +254,15 @@ This is a simple URL: [url]http://freecad.org[/url]
 Here is a [url=http://forum.freecad.org]more complex example[/url].
 This is an email link: [email=chennes@pioneerlibrarysystem.org]email me[/email]
 And here's an image: [img]http://some_image.link[/img]
-    """
 
-    b = BBCodeToMarkdown(text)
+Mentions:
+Mention someone awesome: @amazingperson
+Mention someone not in the test array: @randomhuman
+Make sure email addresses don't get mentions: chennes@pioneerlibrarysystem.org
+"""
+
+    mapping = {"amazingperson":"chennes"}
+    b = BBCodeToMarkdown(text, mapping)
     print (b.md())
 
 if __name__ == '__main__':

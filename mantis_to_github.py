@@ -27,13 +27,15 @@ import json
 import csv
 import sys
 import itertools
+import requests
 import urllib
 import urllib.request
 import urllib.error
 import urllib.response
+import urllib.parse
 from typing import Dict, List, Optional
 
-
+from bbcode_to_markdown import BBCodeToMarkdown
 
 #########################################################################################
 #                                     CONFIGURATION                                     #
@@ -41,7 +43,7 @@ from typing import Dict, List, Optional
 
 # Mantis data should be exported with the following CSV data set:
 # id, project_id, reporter_id, handler_id, priority, severity, reproducibility, version, category_id, date_submitted, os, os_build, platform, view_state, last_updated, summary, description, status, resolution, fixed_in_version, additional_information, attachment_count, bugnotes_count, notes, tags, source_related_changesets, custom_FreeCAD Information
-MANTIS_EXPORT_PATH = "./chennes-4.csv"
+MANTIS_EXPORT_PATH = "./chennes-6.csv"
 
 # The real values for the final import
 #GITHUB_REPO_OWNER = "FreeCAD"
@@ -111,6 +113,7 @@ MANTIS_PROJECT_TO_GITHUB_LABEL_MAP = {
     "TechDraw":"TechDraw"
 }
 
+
 #########################################################################################
 
 
@@ -128,6 +131,7 @@ class Issue:
         self.severity = row_data[next(element_index)]
         self.reproducibility = row_data[next(element_index)]
         self.product_version = row_data[next(element_index)]
+        self.target_version = row_data[next(element_index)]
         self.category = row_data[next(element_index)]
         self.date_submitted = row_data[next(element_index)]
         self.os = row_data[next(element_index)]
@@ -161,12 +165,12 @@ class Issue:
         # labels(array of strings), body	Labels to associate with this issue. NOTE: Only users with push access can set labels for new issues. Labels are silently dropped otherwise.
         # assignees(array of strings), body	Logins for Users to assign to this issue. NOTE: Only users with push access can set assignees for new issues. Assignees are silently dropped otherwise.
         result = {}
-        result["accept"] = "application/vnd.github.v3+json"
-        result["owner"] = GITHUB_REPO_OWNER
-        result["repo"] = GITHUB_REPO_NAME
         result["title"] = self.summary
         result["body"] = self._create_markdown()
-        result["assignees"] = self._map_assignee()
+        #if self.target_version:
+        #    result["milestone"] = self.target_version
+        if self.assigned_to:
+            result["assignees"] = self._map_assignee()
         result["labels"] = self._create_labels()
         return result
 
@@ -179,11 +183,14 @@ class Issue:
         md += f"* **Category:** {self.category}\n"
         md += f"* **Status:** {self.status}\n"
         md += f"* **Tags:** {self.tags}\n"
-        md += f"\n\n# Original Report Text\n\n"
-        md += self.description
+        md += f"\n\n# Original report text\n\n"
+        md += BBCodeToMarkdown(self.description,MANTIS_TO_GITHUB_USERNAME_MAP).md()
         if self.additional_information:
-            md += f"\n\n# Additional Information\n\n"
-            md += self.additional_information
+            md += f"\n\n# Additional information\n\n"
+            md += BBCodeToMarkdown(self.additional_information,MANTIS_TO_GITHUB_USERNAME_MAP).md()
+        if self.steps_to_reproduce:
+            md += f"\n\n# Steps to reproduce\n\n"
+            md += BBCodeToMarkdown(self.steps_to_reproduce,MANTIS_TO_GITHUB_USERNAME_MAP).md()
         cleaned_freecad_info = self._clean_freecad_info()
         if "Build type" in cleaned_freecad_info: # "Build type" is one of the strings that should always be there
             md += f"\n\n# FreeCAD Info\n\n"
@@ -215,7 +222,7 @@ class Issue:
             num_notes = 0
         if self.notes and num_notes > 0:
             md += f"\n\n# Discussion from Mantis ticket\n\n"
-            md += f"```\n{self.notes}\n```"
+            md += self._process_comments()
         return md
 
     def _map_assignee(self) -> Optional[List[str]]:
@@ -249,6 +256,27 @@ The ticket will not be submitted without it.
             return self.freecad_information[len(text_to_remove):]
         else:
             return self.freecad_information
+
+    def _process_comments(self) -> str:
+        split_comments = self.notes.split("\n=-=\n")
+        comments = ""
+        first = True
+        for comment in reversed(split_comments):
+            if not first:
+                comments += "\n\n---\n\n"
+            else:
+                first = False
+            this_comment_text = BBCodeToMarkdown(comment,MANTIS_TO_GITHUB_USERNAME_MAP).md()
+            comment_lines = this_comment_text.split("\n")
+            first_line = True
+            for comment_line in comment_lines:
+                if first_line:
+                    first_line = False
+                    comments += "### Comment by " + comment_line + "\n"
+                else:
+                    comments += comment_line + "\n"
+        comments += "\n"
+        return comments
 
 
 def load_api_key(filename:str) -> Dict[str,str]:
@@ -301,9 +329,24 @@ if __name__ == '__main__':
                     issue = Issue(row)
                     counter += 1
 
-                    # To test an issue, pick one at random with lots of comments and formatting:
-                    if id == 2100:
-                        print (issue.to_github_api_fields())
+                    # For the time being only process issues assigned to me, any others will fail because no one
+                    # else has write access to this repo
+                    if issue.assigned_to == "chennes":
+                        url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/issues"
+                        headers = {
+                            "Authorization":f"token {github_api_key['apikey']}",
+                            "accept":"application/vnd.github.v3+json"
+                        }
+
+                        try:
+                            r = requests.post(url, headers=headers, json=issue.to_github_api_fields())
+                            r.raise_for_status()
+                        except Exception as e:
+                            print ("Failed to create GitHub issue:")
+                            print (url)
+                            print (headers)
+                            print (e)
+
             except RuntimeError as e:
                 print (e)
 
