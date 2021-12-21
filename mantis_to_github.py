@@ -33,6 +33,7 @@ import urllib.request
 import urllib.error
 import urllib.response
 import urllib.parse
+import time
 from typing import Dict, List, Optional
 
 from bbcode_to_markdown import BBCodeToMarkdown
@@ -43,7 +44,7 @@ from bbcode_to_markdown import BBCodeToMarkdown
 
 # Mantis data should be exported with the following CSV data set:
 # id, project_id, reporter_id, handler_id, priority, severity, reproducibility, version, category_id, date_submitted, os, os_build, platform, view_state, last_updated, summary, description, status, resolution, fixed_in_version, additional_information, attachment_count, bugnotes_count, notes, tags, source_related_changesets, custom_FreeCAD Information
-MANTIS_EXPORT_PATH = "./chennes-6.csv"
+MANTIS_EXPORT_PATH = "./chennes-7.csv"
 
 # The real values for the final import
 #GITHUB_REPO_OWNER = "FreeCAD"
@@ -314,6 +315,7 @@ if __name__ == '__main__':
 
     counter = 0
     sys.stdout.reconfigure(encoding='utf-8') # Beat MSYS2 into submission
+    trigger_start_at_issue = None
     with open (MANTIS_EXPORT_PATH, "r", encoding="utf-8", errors='ignore') as f:
         csv.field_size_limit(2147483647) # Some of these bug reports are very large...
         csv_reader = csv.reader(f, delimiter=',', quotechar='"')
@@ -325,27 +327,52 @@ if __name__ == '__main__':
                         id = int(row[0])
                     except Exception:
                         continue
+
+                    if trigger_start_at_issue is not None:
+                        if id == trigger_start_at_issue:
+                            trigger_start_at_issue = None
+                        else:
+                            continue
+
                     print (f"Processing issue ID {id}")
                     issue = Issue(row)
                     counter += 1
 
-                    # For the time being only process issues assigned to me, any others will fail because no one
-                    # else has write access to this repo
-                    if issue.assigned_to == "chennes":
-                        url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/issues"
-                        headers = {
-                            "Authorization":f"token {github_api_key['apikey']}",
-                            "accept":"application/vnd.github.v3+json"
-                        }
+                    url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/issues"
+                    headers = {
+                        "Authorization":f"token {github_api_key['apikey']}",
+                        "accept":"application/vnd.github.v3+json"
+                    }
 
-                        try:
+                    try:
+                        try_again = True
+                        while try_again:
                             r = requests.post(url, headers=headers, json=issue.to_github_api_fields())
-                            r.raise_for_status()
-                        except Exception as e:
-                            print ("Failed to create GitHub issue:")
-                            print (url)
-                            print (headers)
-                            print (e)
+                            if r.status_code == 201:
+                                try_again = False
+                                response = r.json()
+
+                                print (f"Mantis issue {id} migrated to GitHub issue {response['number']} ({response['html_url']})")
+                                time.sleep(1) # Avoid the secondary rate limiter by waiting one second between requests
+                            elif r.status_code == 403:
+                                # Probably we hit a rate limit: check for the try_again header
+                                if "Retry-After" in r.headers:
+                                    wait_for = int(r.headers["Retry-After"])
+                                    print (f"Hit rate limiter, will re-try in {wait_for} seconds")
+                                    time.sleep(wait_for)
+                                else:
+                                    print (f"Received a 403 error when trying to migrate issue {id}. Stopping.")
+                                    exit(r.status_code)
+                            else:
+                                print (f"Received a {r.status_code} error when trying to migrate issue {id}. Stopping.")
+                                exit(r.status_code)
+
+                    except Exception as e:
+                        print ("Failed to create GitHub issue:")
+                        print (url)
+                        print (headers)
+                        print (e)
+                        exit(1)
 
             except RuntimeError as e:
                 print (e)

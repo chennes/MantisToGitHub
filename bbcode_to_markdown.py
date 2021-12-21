@@ -191,7 +191,8 @@ class BBCodeToMarkdown:
                     continue
             mention = match.group(1)
             span = match.span()
-            if mention in self.mention_map and len(self.mention_map[mention]) > 0:
+            #if mention in self.mention_map and len(self.mention_map[mention]) > 0:
+            if False: # For testing, don't keep sending mentions
                 new_mention = "@" + self.mention_map[match.group(1)]
             else:
                 # If they aren't in the map, strip the "@" sign so we don't accidentally mention someone random in our
