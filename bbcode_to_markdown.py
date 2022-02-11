@@ -1,67 +1,68 @@
 # -*- coding: utf-8 -*-
 
-#***************************************************************************
-#*                                                                         *
-#*   Copyright (c) 2021 Chris Hennes <chennes@pioneerlibrarysystem.org>    *
-#*                                                                         *
-#*   This program is free software; you can redistribute it and/or modify  *
-#*   it under the terms of the GNU Lesser General Public License (LGPL)    *
-#*   as published by the Free Software Foundation; either version 2 of     *
-#*   the License, or (at your option) any later version.                   *
-#*   for detail see the LICENSE text file.                                 *
-#*                                                                         *
-#*   This program is distributed in the hope that it will be useful,       *
-#*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-#*   GNU Library General Public License for more details.                  *
-#*                                                                         *
-#*   You should have received a copy of the GNU Library General Public     *
-#*   License along with this program; if not, write to the Free Software   *
-#*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
-#*   USA                                                                   *
-#*                                                                         *
-#***************************************************************************
+# ***************************************************************************
+# *                                                                         *
+# *   Copyright (c) 2021 Chris Hennes <chennes@pioneerlibrarysystem.org>    *
+# *                                                                         *
+# *   This program is free software; you can redistribute it and/or modify  *
+# *   it under the terms of the GNU Lesser General Public License (LGPL)    *
+# *   as published by the Free Software Foundation; either version 2 of     *
+# *   the License, or (at your option) any later version.                   *
+# *   for detail see the LICENSE text file.                                 *
+# *                                                                         *
+# *   This program is distributed in the hope that it will be useful,       *
+# *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+# *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+# *   GNU Library General Public License for more details.                  *
+# *                                                                         *
+# *   You should have received a copy of the GNU Library General Public     *
+# *   License along with this program; if not, write to the Free Software   *
+# *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
+# *   USA                                                                   *
+# *                                                                         *
+# ***************************************************************************
 
 import re
 import sys
 from typing import Dict
 
+
 class BBCodeToMarkdown:
-    """ Convert text containing BBCode characters to GitHub-flavored markdown. Only Markdown is emitted,
+    """Convert text containing BBCode characters to GitHub-flavored markdown. Only Markdown is emitted,
     no HTML tags are used. Unsupported BBCode tags are silently removed. Nesting is partially supported.
-    This is a naive converter based on regular expressions, it does NOT do any real language parsing. """
+    This is a naive converter based on regular expressions, it does NOT do any real language parsing."""
 
-# BBCode tags and their treatment:
-# [b]Text[/b] -> Bold, maps to **Text**
-# [i]Text[/i] -> Italic, maps to *Text*
-# [s]Text[/s] -> Strikethrough, maps to ~~Text~~
-# [u][/u] -> Underline, not supported, stripped
-# [color=yellow][/color] -> Colored text, not supported, stripped
-# [highlight=blue][/highlight] -> Colored background, not supported, stripped
-# [size=125][/size] -> Size is not directly supported, but 125 is made an H1 if it's on its own line
-# [sup][/sup] -> Not supported, stripped
-# [sub][/sub] -> Not supported, stripped
-# [list][*][/list] -> Converted to a Markdown-style list, either bulleted or numbered as needed
-# [code=lang][/code] -> Code: if on its own line(s), ```code``` is used. If inline, `code`.
-# [quote=bob][/quote] -> Replaced by a blockquote: > 
-# [hr] -> Replaced by === and the required blank lines
-# [left][/left] -> Not supported, stripped
-# [center][/center] -> Not supported, stripped
-# [right][/right] -> Not supported, stripped
-# [justify][/justify] -> Not supported, stripped
-# [url=link]text[/url] -> Link, replaced with [text](link)
-# [email=chennes@]Your email here[/email] -> Replaced with a mailto: link as above
-# [img]link[/img] -> Image, replaced with !(link)
-#
-# Finally, @ mentions are handled via a passed-in map that takes Mantis usernames and maps them to 
-# GitHub usernames. Any mapping that results in an empty string, plus any mention not in the mapping,
-# have their "@" signs removed, to avoid mentioning someone inadvertently. 
+    # BBCode tags and their treatment:
+    # [b]Text[/b] -> Bold, maps to **Text**
+    # [i]Text[/i] -> Italic, maps to *Text*
+    # [s]Text[/s] -> Strikethrough, maps to ~~Text~~
+    # [u][/u] -> Underline, not supported, stripped
+    # [color=yellow][/color] -> Colored text, not supported, stripped
+    # [highlight=blue][/highlight] -> Colored background, not supported, stripped
+    # [size=125][/size] -> Size is not directly supported, but 125 is made an H1 if it's on its own line
+    # [sup][/sup] -> Not supported, stripped
+    # [sub][/sub] -> Not supported, stripped
+    # [list][*][/list] -> Converted to a Markdown-style list, either bulleted or numbered as needed
+    # [code=lang][/code] -> Code: if on its own line(s), ```code``` is used. If inline, `code`.
+    # [quote=bob][/quote] -> Replaced by a blockquote: >
+    # [hr] -> Replaced by === and the required blank lines
+    # [left][/left] -> Not supported, stripped
+    # [center][/center] -> Not supported, stripped
+    # [right][/right] -> Not supported, stripped
+    # [justify][/justify] -> Not supported, stripped
+    # [url=link]text[/url] -> Link, replaced with [text](link)
+    # [email=chennes@]Your email here[/email] -> Replaced with a mailto: link as above
+    # [img]link[/img] -> Image, replaced with !(link)
+    #
+    # Finally, @ mentions are handled via a passed-in map that takes Mantis usernames and maps them to
+    # GitHub usernames. Any mapping that results in an empty string, plus any mention not in the mapping,
+    # have their "@" signs removed, to avoid mentioning someone inadvertently.
 
-    def __init__ (self, bbcode:str, mention_map:Dict[str,str] = {}):
+    def __init__(self, bbcode: str, mention_map: Dict[str, str] = {}):
         self.text = bbcode
         self.mention_map = mention_map
 
-    def md (self) -> str:
+    def md(self) -> str:
         self.strip_unsupported()
         self.bold()
         self.italic()
@@ -77,7 +78,17 @@ class BBCodeToMarkdown:
         return self.text
 
     def strip_unsupported(self):
-        unsupported_tags = ["u", "color", "highlight", "sup", "sub", "left", "center", "right", "justify"]
+        unsupported_tags = [
+            "u",
+            "color",
+            "highlight",
+            "sup",
+            "sub",
+            "left",
+            "center",
+            "right",
+            "justify",
+        ]
         for tag in unsupported_tags:
             search_regex = f"\\[{tag}.*?\\](.*?)\\[/{tag}\\]"
             self.text = re.sub(search_regex, "\\1", self.text, flags=re.IGNORECASE)
@@ -103,7 +114,7 @@ class BBCodeToMarkdown:
         search_regex = "\\[list\\s*=\\s*([0-9]+)\\](.*?)\\[/list\\]"
         list_item_regex = "\\s*\\[\\*\\](.*)"
         list_item_matcher = re.compile(list_item_regex)
-        outer_pattern= re.compile(search_regex, flags=re.IGNORECASE|re.DOTALL)
+        outer_pattern = re.compile(search_regex, flags=re.IGNORECASE | re.DOTALL)
         match = outer_pattern.search(self.text)
         while match is not None:
             list_item_number = int(match.group(1))
@@ -115,20 +126,22 @@ class BBCodeToMarkdown:
                 parsed_list_text += f"{list_item_number}. {list_item.group(1)}\n"
                 list_item_number += 1
                 list_item = list_item_matcher.search(list_contents)
-            new_string = self.text[0:span[0]] + parsed_list_text + self.text[span[1]:]
+            new_string = (
+                self.text[0 : span[0]] + parsed_list_text + self.text[span[1] :]
+            )
             self.text = new_string
             match = outer_pattern.search(self.text)
 
         # Unordered lists are slightly simpler:
         search_regex = "\\[list.*?\\](.*?)\\[/list\\]"
         list_item_matcher = re.compile(list_item_regex)
-        outer_pattern= re.compile(search_regex, flags=re.IGNORECASE|re.DOTALL)
+        outer_pattern = re.compile(search_regex, flags=re.IGNORECASE | re.DOTALL)
         match = outer_pattern.search(self.text)
         while match is not None:
             list_contents = match.group(1)
             span = match.span()
-            list_contents = list_contents.replace("[*]","* ")
-            new_string = self.text[0:span[0]] + list_contents + self.text[span[1]:]
+            list_contents = list_contents.replace("[*]", "* ")
+            new_string = self.text[0 : span[0]] + list_contents + self.text[span[1] :]
             self.text = new_string
             match = outer_pattern.search(self.text)
 
@@ -138,11 +151,13 @@ class BBCodeToMarkdown:
         self.text = re.sub(search_regex, "`\\1`", self.text, flags=re.IGNORECASE)
         # Block of code:
         search_regex = "\\[code.*?\\](.*?)\\[/code\\]"
-        self.text = re.sub(search_regex, "```\\1```\n", self.text, flags=re.IGNORECASE|re.DOTALL)
+        self.text = re.sub(
+            search_regex, "```\\1```\n", self.text, flags=re.IGNORECASE | re.DOTALL
+        )
 
     def quote(self):
         search_regex = "\\[quote.*?\\]\n(.*?)\n\\[/quote\\]\n"
-        quote_matcher = re.compile(search_regex, flags=re.IGNORECASE|re.DOTALL)
+        quote_matcher = re.compile(search_regex, flags=re.IGNORECASE | re.DOTALL)
         match = quote_matcher.search(self.text)
         while match is not None:
             span = match.span()
@@ -151,7 +166,9 @@ class BBCodeToMarkdown:
             quote_in_markdown = ""
             for line in lines:
                 quote_in_markdown += "> " + line + "\n"
-            new_string = self.text[0:span[0]] + quote_in_markdown + self.text[span[1]:]
+            new_string = (
+                self.text[0 : span[0]] + quote_in_markdown + self.text[span[1] :]
+            )
             self.text = new_string
             match = quote_matcher.search(self.text)
 
@@ -169,7 +186,9 @@ class BBCodeToMarkdown:
 
     def email(self):
         search_regex = "\\[email\\s*=\\s*(.*?)\\](.*?)\\[/email\\]"
-        self.text = re.sub(search_regex, "[\\2](mailto:\\1)", self.text, flags=re.IGNORECASE)
+        self.text = re.sub(
+            search_regex, "[\\2](mailto:\\1)", self.text, flags=re.IGNORECASE
+        )
 
     def img(self):
         search_regex = "\\[img\\](.*?)\\[/img\\]"
@@ -183,25 +202,26 @@ class BBCodeToMarkdown:
         finished_string = ""
         for match in matches:
             if match.start() > 0:
-                if self.text[match.start()-1].isalnum():
+                if self.text[match.start() - 1].isalnum():
                     # If the character before the @ sign is a letter or number, this is probably an email
                     # address, not an @mention -- skip it.
-                    finished_string += self.text[pos:match.end()]
+                    finished_string += self.text[pos : match.end()]
                     pos = match.end()
                     continue
             mention = match.group(1)
             span = match.span()
-            #if mention in self.mention_map and len(self.mention_map[mention]) > 0:
-            if False: # For testing, don't keep sending mentions
+            # if mention in self.mention_map and len(self.mention_map[mention]) > 0:
+            if False:  # For testing, don't keep sending mentions
                 new_mention = "@" + self.mention_map[match.group(1)]
             else:
                 # If they aren't in the map, strip the "@" sign so we don't accidentally mention someone random in our
                 # Markdown
                 new_mention = match.group(1)
-            finished_string += self.text[pos:span[0]] + new_mention
+            finished_string += self.text[pos : span[0]] + new_mention
             pos = span[1]
         finished_string += self.text[pos:]
         self.text = finished_string
+
 
 def selftest():
     text = """
@@ -262,14 +282,15 @@ Mention someone not in the test array: @randomhuman
 Make sure email addresses don't get mentions: chennes@pioneerlibrarysystem.org
 """
 
-    mapping = {"amazingperson":"chennes"}
+    mapping = {"amazingperson": "chennes"}
     b = BBCodeToMarkdown(text, mapping)
-    print (b.md())
+    print(b.md())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     text = sys.argv[1]
     if text == "selftest":
         selftest()
     else:
         b = BBCodeToMarkdown(text)
-        print (b.md())
+        print(b.md())

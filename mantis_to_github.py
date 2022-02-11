@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
 
-#***************************************************************************
-#*                                                                         *
-#*   Copyright (c) 2021 Chris Hennes <chennes@pioneerlibrarysystem.org>    *
-#*                                                                         *
-#*   This program is free software; you can redistribute it and/or modify  *
-#*   it under the terms of the GNU Lesser General Public License (LGPL)    *
-#*   as published by the Free Software Foundation; either version 2 of     *
-#*   the License, or (at your option) any later version.                   *
-#*   for detail see the LICENSE text file.                                 *
-#*                                                                         *
-#*   This program is distributed in the hope that it will be useful,       *
-#*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-#*   GNU Library General Public License for more details.                  *
-#*                                                                         *
-#*   You should have received a copy of the GNU Library General Public     *
-#*   License along with this program; if not, write to the Free Software   *
-#*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
-#*   USA                                                                   *
-#*                                                                         *
-#***************************************************************************
+# ***************************************************************************
+# *                                                                         *
+# *   Copyright (c) 2021 Chris Hennes <chennes@pioneerlibrarysystem.org>    *
+# *                                                                         *
+# *   This program is free software; you can redistribute it and/or modify  *
+# *   it under the terms of the GNU Lesser General Public License (LGPL)    *
+# *   as published by the Free Software Foundation; either version 2 of     *
+# *   the License, or (at your option) any later version.                   *
+# *   for detail see the LICENSE text file.                                 *
+# *                                                                         *
+# *   This program is distributed in the hope that it will be useful,       *
+# *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+# *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+# *   GNU Library General Public License for more details.                  *
+# *                                                                         *
+# *   You should have received a copy of the GNU Library General Public     *
+# *   License along with this program; if not, write to the Free Software   *
+# *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
+# *   USA                                                                   *
+# *                                                                         *
+# ***************************************************************************
 
 import os
 import json
@@ -44,15 +44,22 @@ from bbcode_to_markdown import BBCodeToMarkdown
 
 # Mantis data should be exported with the following CSV data set:
 # id, project_id, reporter_id, handler_id, priority, severity, reproducibility, version, category_id, date_submitted, os, os_build, platform, view_state, last_updated, summary, description, status, resolution, fixed_in_version, additional_information, attachment_count, bugnotes_count, notes, tags, source_related_changesets, custom_FreeCAD Information
-MANTIS_EXPORT_PATH = "./chennes-7.csv"
+MANTIS_EXPORT_PATH = "./Mantis-2022-02-07-failures.csv"
+
+# The mantis attachments table is a CSV export of the Mantis bug file table
+MANTIS_ATTACHMENTS_TABLE = "./mantis_bug_file_table.csv"
+
+# The attachments folder contains the actual Mantis attachment files, named with their SHA1 hash, and
+# matching the MANTIS_ATTACHMENTS_TABLE database export
+MANTIS_ATTACHMENTS_DIR = "./attachments/"
 
 # The real values for the final import
-#GITHUB_REPO_OWNER = "FreeCAD"
-#GITHUB_REPO_NAME = "FreeCAD"
+GITHUB_REPO_OWNER = "FreeCAD"
+GITHUB_REPO_NAME = "FreeCAD"
 
 # For testing
-GITHUB_REPO_OWNER = "chennes"
-GITHUB_REPO_NAME = "MantisToGitHub"
+#GITHUB_REPO_OWNER = "chennes"
+#GITHUB_REPO_NAME = "MantisToGitHub"
 
 # The GitHub API token file should contain a single JSON object specifying the
 # username and api key, e.g.
@@ -61,68 +68,68 @@ GITHUB_REPO_NAME = "MantisToGitHub"
 #   "apikey":"abcdefghijklmnopqrstuvwxyz"
 # }
 # This key should be configured with repo access.
-GITHUB_API_TOKEN_FILE = "github.txt" # !!!! DO NOT ADD THIS FILE TO THE GIT REPO !!!!
+GITHUB_API_TOKEN_FILE = "github.txt"  # !!!! DO NOT ADD THIS FILE TO THE GIT REPO !!!!
 
 MANTIS_TO_GITHUB_USERNAME_MAP = {
-    "abdullah":"abdullahtahiriyo" ,
-    "AR795":"" ,
-    "berndhahnebach":"berndhahnebach" ,
-    "carlopav":"carlopav" ,
-    "chennes":"chennes" ,
-    "chrisb":"" ,
-    "David_D":"" ,
-    "DeepSOIC":"deepsoic" ,
-    "eivindkvedalen":"eivindkv" ,
-    "howetuft":"" ,
-    "HoWil":"" ,
-    "hyarion":"hyarion" ,
-    "ian.rees":"ianrees" ,
-    "ickby":"ickby" ,
-    "kkremitzki":"kkremitzki" ,
-    "Kunda1":"luzpaz" ,
-    "looo":"looooo" ,
-    "mlampert":"mlampert" ,
-    "openBrain":"0penBrain" ,
-    "paullee":"paullee0" ,
-    "realthunder":"realthunder" ,
-    "russ4262":"Russ4262" ,
-    "sgrogan":"sgrogan" ,
-    "shaiseger":"shaise" ,
-    "shoogen":"5263" ,
-    "sliptonic":"sliptonic" ,
-    "triplus":"triplus" ,
-    "uwestoehr":"donovaly" ,
-    "vejmarie":"vejmarie" ,
-    "wandererfan":"WandererFan" ,
-    "wmayer":"wwmayer" ,
-    "yorik":"yorikvanhavre"
+    "abdullah": "abdullahtahiriyo",
+    "AR795": "",
+    "berndhahnebach": "berndhahnebach",
+    "carlopav": "carlopav",
+    "chennes": "chennes",
+    "chrisb": "",
+    "David_D": "",
+    "DeepSOIC": "deepsoic",
+    "eivindkvedalen": "",
+    "howetuft": "",
+    "HoWil": "",
+    "hyarion": "hyarion",
+    "ian.rees": "",
+    "ickby": "ickby",
+    "kkremitzki": "kkremitzki",
+    "Kunda1": "luzpaz",
+    "looo": "looooo",
+    "mlampert": "mlampert",
+    "openBrain": "0penBrain",
+    "paullee": "",
+    "realthunder": "",
+    "russ4262": "",
+    "sgrogan": "sgrogan",
+    "shaiseger": "shaise",
+    "shoogen": "",
+    "sliptonic": "sliptonic",
+    "triplus": "triplus",
+    "uwestoehr": "donovaly",
+    "vejmarie": "vejmarie",
+    "wandererfan": "WandererFan",
+    "wmayer": "wwmayer",
+    "yorik": "yorikvanhavre",
 }
 
 # Not all Mantis projects have corresponding GitHub labels: for those that do,
 # this map does the translation between them
 MANTIS_PROJECT_TO_GITHUB_LABEL_MAP = {
-    "Arch":"🏛 Arch",
-    "Bug":"🐛 bug",
-    "FreeCAD":"core",
-    "Draft":"📐 Draft",
-    "FEM":"🧪 FEM",
-    "Part":"Part",
-    "PartDesign":"🚜 PartDesign",
-    "Path":"🛤️ Path",
-    "Sketcher":"✏️ Sketcher",
-    "Spreadsheet":"Spreadsheet",
-    "TechDraw":"TechDraw"
+    "Arch": "🏛 Arch",
+    "Bug": "🐛 bug",
+    "FreeCAD": "core",
+    "Draft": "📐 Draft",
+    "FEM": "🧪 FEM",
+    "Part": "🧱 Part",
+    "PartDesign": "🚜 PartDesign",
+    "Path": "🛤️ Path",
+    "Sketcher": "✏️ Sketcher",
+    "Spreadsheet": "Spreadsheet",
+    "TechDraw": "⚙ TechDraw",
 }
-
 
 #########################################################################################
 
 
 class Issue:
-
     def __init__(self, row_data):
-        if len(row_data) < 27 :
-            raise RuntimeError(f"Expected 27 fields in CSV row, found only {len(row_data)}")
+        if len(row_data) < 27:
+            raise RuntimeError(
+                f"Expected 27 fields in CSV row, found only {len(row_data)}"
+            )
         element_index = itertools.count(0)
         self.id = row_data[next(element_index)]
         self.project = row_data[next(element_index)]
@@ -154,11 +161,11 @@ class Issue:
         self.related = row_data[next(element_index)]
         self.freecad_information = row_data[next(element_index)]
 
-    def to_github_api_fields(self) -> Dict[str,str]:
+    def to_github_api_fields(self) -> Dict[str, str]:
         # GitHub REST API fields for creating an issue:
         # accept(string), header	Setting to application/vnd.github.v3+json is recommended.
-        # owner(string), path	
-        # repo(string), path	
+        # owner(string), path
+        # repo(string), path
         # title(string), body	Required. The title of the issue.
         # body(string), body	The contents of the issue.
         # assignee(string), body	Login for the user that this issue should be assigned to. NOTE: Only users with push access can set the assignee for new issues. The assignee is silently dropped otherwise. This field is deprecated.
@@ -168,16 +175,20 @@ class Issue:
         result = {}
         result["title"] = self.summary
         result["body"] = self._create_markdown()
-        #if self.target_version:
+        # if self.target_version:
         #    result["milestone"] = self.target_version
         if self.assigned_to:
             result["assignees"] = self._map_assignee()
+            if not result["assignees"]:
+                result["assignees"] = []
         result["labels"] = self._create_labels()
         return result
 
     def _create_markdown(self) -> str:
         md = ""
-        md += f"Issue imported from https://tracker.freecad.org/view.php?id={self.id}\n\n"
+        md += (
+            f"Issue imported from https://tracker.freecad.org/view.php?id={self.id}\n\n"
+        )
         md += f"* **Reporter:** {self.reporter}\n"
         md += f"* **Date submitted:** {self.date_submitted}\n"
         md += f"* **FreeCAD version:** {self.product_version}\n"
@@ -185,15 +196,21 @@ class Issue:
         md += f"* **Status:** {self.status}\n"
         md += f"* **Tags:** {self.tags}\n"
         md += f"\n\n# Original report text\n\n"
-        md += BBCodeToMarkdown(self.description,MANTIS_TO_GITHUB_USERNAME_MAP).md()
+        md += BBCodeToMarkdown(self.description, MANTIS_TO_GITHUB_USERNAME_MAP).md()
         if self.additional_information:
             md += f"\n\n# Additional information\n\n"
-            md += BBCodeToMarkdown(self.additional_information,MANTIS_TO_GITHUB_USERNAME_MAP).md()
+            md += BBCodeToMarkdown(
+                self.additional_information, MANTIS_TO_GITHUB_USERNAME_MAP
+            ).md()
         if self.steps_to_reproduce:
             md += f"\n\n# Steps to reproduce\n\n"
-            md += BBCodeToMarkdown(self.steps_to_reproduce,MANTIS_TO_GITHUB_USERNAME_MAP).md()
+            md += BBCodeToMarkdown(
+                self.steps_to_reproduce, MANTIS_TO_GITHUB_USERNAME_MAP
+            ).md()
         cleaned_freecad_info = self._clean_freecad_info()
-        if "Build type" in cleaned_freecad_info: # "Build type" is one of the strings that should always be there
+        if (
+            "Build type" in cleaned_freecad_info
+        ):  # "Build type" is one of the strings that should always be there
             md += f"\n\n# FreeCAD Info\n\n"
             md += f"```\n{cleaned_freecad_info}\n```"
         md += "\n\n# Other bug information\n\n"
@@ -201,7 +218,7 @@ class Issue:
             md += f"* **Priority:** {self.priority}\n"
         if self.severity:
             md += f"* **Severity:** {self.severity}\n"
-        #if self.reproducibility:
+        # if self.reproducibility:
         #    md += f"* **Reproducibility:** {self.reproducibility}\n"
         if self.category:
             md += f"* **Category:** {self.category}\n"
@@ -209,11 +226,11 @@ class Issue:
             md += f"* **OS: {self.os} {self.os_version}**\n"
         if self.platform:
             md += f"* **Platform:** {self.platform}\n"
-        #if self.view_status:
+        # if self.view_status:
         #    md += f"* **View status:** {self.view_status}\n"
         if self.updated:
             md += f"* **Updated:** {self.updated}\n"
-        #if self.resolution:
+        # if self.resolution:
         #    md += f"* **Resolution:** {self.resolution}\n"
         if self.fixed_in_version:
             md += f"* **Fixed in version:** {self.fixed_in_version}\n"
@@ -237,13 +254,13 @@ class Issue:
         # For FreeCAD's purposes, the only label we use is the project name:
         labels = []
         if self.project in MANTIS_PROJECT_TO_GITHUB_LABEL_MAP:
-            labels.append (MANTIS_PROJECT_TO_GITHUB_LABEL_MAP[self.project])
+            labels.append(MANTIS_PROJECT_TO_GITHUB_LABEL_MAP[self.project])
         else:
-            labels.append (self.project)
+            labels.append(self.project)
         if self.category == "Bug":
-            labels.append ("🐛 bug")
+            labels.append("🐛 bug")
         elif self.category == "Feature":
-            labels.append ("Feature")
+            labels.append("Feature")
         return labels
 
     def _clean_freecad_info(self) -> str:
@@ -254,7 +271,7 @@ NOTE: just the snippet alone will do without anything else included.
 The ticket will not be submitted without it.
 -->"""
         if self.freecad_information.startswith(text_to_remove):
-            return self.freecad_information[len(text_to_remove):]
+            return self.freecad_information[len(text_to_remove) :]
         else:
             return self.freecad_information
 
@@ -267,7 +284,9 @@ The ticket will not be submitted without it.
                 comments += "\n\n---\n\n"
             else:
                 first = False
-            this_comment_text = BBCodeToMarkdown(comment,MANTIS_TO_GITHUB_USERNAME_MAP).md()
+            this_comment_text = BBCodeToMarkdown(
+                comment, MANTIS_TO_GITHUB_USERNAME_MAP
+            ).md()
             comment_lines = this_comment_text.split("\n")
             first_line = True
             for comment_line in comment_lines:
@@ -280,20 +299,21 @@ The ticket will not be submitted without it.
         return comments
 
 
-def load_api_key(filename:str) -> Dict[str,str]:
-    with open(filename,"r") as f:
+def load_api_key(filename: str) -> Dict[str, str]:
+    with open(filename, "r") as f:
         api_key_json = f.read()
         api_key = json.loads(api_key_json)
         if not "username" in api_key:
-            print (f"Malformed API key file {filename}: no username")
+            print(f"Malformed API key file {filename}: no username")
             exit(1)
         if not "apikey" in api_key:
-            print (f"Malformed API key file {filename}: no apikey")
+            print(f"Malformed API key file {filename}: no apikey")
             exit(1)
     return api_key
 
+
 def csv_iteration_wrapper(csv_iterator):
-    """ Iteration over the CSV might encounter all manner of errors: turn them into warnings. """
+    """Iteration over the CSV might encounter all manner of errors: turn them into warnings."""
 
     counter = 0
     while True:
@@ -303,24 +323,38 @@ def csv_iteration_wrapper(csv_iterator):
         except StopIteration:
             break
         except Exception as e:
-            print(f"WARNING: CSV reader encountered an error and skipped row {counter} ({e})")
+            print(
+                f"WARNING: CSV reader encountered an error and skipped row {counter} ({e})"
+            )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     github_api_key = load_api_key(GITHUB_API_TOKEN_FILE)
 
     if not os.path.isfile(MANTIS_EXPORT_PATH):
-        print (f"Could not locate {MANTIS_EXPORT_PATH}")
+        print(f"Could not locate {MANTIS_EXPORT_PATH}")
         exit(1)
 
     counter = 0
-    sys.stdout.reconfigure(encoding='utf-8') # Beat MSYS2 into submission
-    trigger_start_at_issue = None
-    with open (MANTIS_EXPORT_PATH, "r", encoding="utf-8", errors='ignore') as f:
-        csv.field_size_limit(2147483647) # Some of these bug reports are very large...
-        csv_reader = csv.reader(f, delimiter=',', quotechar='"')
+    sys.stdout.reconfigure(encoding="utf-8")  # Beat MSYS2 into submission
 
+    # On the command line, if an argument is passed it is the issue ID to start at
+    trigger_start_at_issue = None
+    if len(sys.argv) > 1:
+        trigger_start_at_issue = int(sys.argv[1])
+
+    result_database = {}
+    row_counter = 0
+    with open(MANTIS_EXPORT_PATH, "r", encoding="utf-8", errors="ignore") as f:
+        csv.field_size_limit(2147483647)  # Some of these bug reports are very large...
+        csv_reader = csv.reader(f, delimiter=",", quotechar='"')
+
+        stop = False
         for row in csv_iteration_wrapper(csv_reader):
+            if stop:
+                break
+            row_counter += 1
             try:
                 if len(row) > 0:
                     try:
@@ -334,50 +368,96 @@ if __name__ == '__main__':
                         else:
                             continue
 
-                    print (f"Processing issue ID {id}")
+                    print(f"Processing issue ID {id}", flush=True)
                     issue = Issue(row)
                     counter += 1
 
                     url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/issues"
                     headers = {
-                        "Authorization":f"token {github_api_key['apikey']}",
-                        "accept":"application/vnd.github.v3+json"
+                        "Authorization": f"token {github_api_key['apikey']}",
+                        "accept": "application/vnd.github.v3+json",
                     }
 
                     try:
                         try_again = True
-                        while try_again:
-                            r = requests.post(url, headers=headers, json=issue.to_github_api_fields())
+                        while try_again and not stop:
+                            r = requests.post(
+                                url, headers=headers, json=issue.to_github_api_fields()
+                            )
                             if r.status_code == 201:
                                 try_again = False
                                 response = r.json()
 
-                                print (f"Mantis issue {id} migrated to GitHub issue {response['number']} ({response['html_url']})")
-                                time.sleep(1) # Avoid the secondary rate limiter by waiting one second between requests
+                                print(
+                                    f"{row_counter}: Mantis issue {id} migrated to GitHub issue {response['number']} ({response['html_url']})",
+                                    flush=True,
+                                )
+                                result_database[id] = response["number"]
+                                time.sleep(
+                                    1
+                                )  # Avoid the secondary rate limiter by waiting one second between requests
+                                if row_counter % 10 == 0:
+                                    # Because creating issues sends notifications, GitHub further throttles issue creation.
+                                    # Every ten issues, pause for a minute to try to avoid that rate limit (which does not
+                                    # send a Retry-After header).
+                                    print(
+                                        "Avoiding rate limiter by waiting one minute...",
+                                        flush=True,
+                                    )
+                                    for i in range(6):
+                                        print(
+                                            f"{60-i*10} seconds remaining", flush=True
+                                        )
+                                        time.sleep(10)
+                                    print("Continuing...", flush=True)
                             elif r.status_code == 403:
                                 # Probably we hit a rate limit: check for the try_again header
                                 if "Retry-After" in r.headers:
                                     wait_for = int(r.headers["Retry-After"])
-                                    print (f"Hit rate limiter, will re-try in {wait_for} seconds")
+                                    print(
+                                        f"Hit rate limiter, will re-try in {wait_for} seconds",
+                                        flush=True,
+                                    )
                                     time.sleep(wait_for)
                                 else:
-                                    print (f"Received a 403 error when trying to migrate issue {id}. Stopping.")
-                                    exit(r.status_code)
+                                    # This is expected for creation of issues: we try to
+                                    # work around it above by sleeping for a minute after
+                                    # every ten issues, but that may not be enough. Just
+                                    # stop here, and emit a message. The user will have
+                                    # to manually restart.
+                                    print(
+                                        f"Received a 403 error when trying to migrate issue {id}. Stopping."
+                                    )
+                                    print(r.headers)
+                                    stop = True
+                            elif r.status_code == 422:
+                                # Unprocessable entity: print the whole message
+                                print (r.json())
+                                stop = True
                             else:
-                                print (f"Received a {r.status_code} error when trying to migrate issue {id}. Stopping.")
-                                exit(r.status_code)
+                                print(
+                                    f"Received a {r.status_code} error when trying to migrate issue {id}. Stopping."
+                                )
+                                stop = True
 
                     except Exception as e:
-                        print ("Failed to create GitHub issue:")
-                        print (url)
-                        print (headers)
-                        print (e)
-                        exit(1)
+                        print("Failed to create GitHub issue:")
+                        print(url)
+                        print(headers)
+                        print(e)
+                        stop = True
 
             except RuntimeError as e:
-                print (e)
+                print(e)
+                stop = True
 
-    print ("*"*90)
-    print ("SUMMARY")
-    print ("*"*90)
-    print (f"Found {counter} issues in the CSV file")
+        if len(result_database) > 0:
+            print("Appending results to migration_results.csv")
+            with open("migration_results.csv", "a") as f:
+                for mantis, github in result_database.items():
+                    f.write(f"{mantis},{github}\n")
+
+    print("*" * 90)
+    print("SUMMARY")
+    print("*" * 90)
+    print(f"Found {counter} issues in the CSV file")
