@@ -78,7 +78,7 @@ with open (BUG_MAP_CSV, "r") as f:
                 g = int(github_id)
                 add_mantis_note(m, g)
             except Exception as e:
-                print ("Failed to create note in Mantis bug {mantis_id}, for GitHub bug {github_id}: {str(e)}. Continuing...")
+                print (f"Failed to create note in Mantis bug {mantis_id}, for GitHub bug {github_id}: {str(e)}. Continuing...")
 
 connection.commit()
 cursor.close()
