@@ -30,7 +30,13 @@ migration, in particular to support attachements. As of this writing there is no
 documented GitHub REST API for uploading files, so this script does not migrate attachments,
 instead opting to provide a back-link to the original Mantis ticket.
 
+An auxilliary script is provided to create Mantis database entries linking back to the GitHub
+issue. This script is intended to be run on the server with the Mantis instance on it, and has
+configuration variables at the top. It requires the BBCodePlus Mantis plugin (or you can 
+modify the script to not use the BBCode tags for the URL).
+
 ## Example
 
 The FreeCAD project used this importer to migrate our Mantis database: you can see the results
-starting at https://github.com/FreeCAD/FreeCAD/issues/5538
+starting at https://github.com/FreeCAD/FreeCAD/issues/5538, and the original issues at
+https://tracker.freecad.org
